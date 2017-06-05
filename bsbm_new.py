@@ -7,6 +7,9 @@ def initiateFile(filehandler):
 	filehandler.write('<key id="_id" for="node" attr.name="identity" attr.type="string"/>\n')
 	filehandler.write('<key id="homepage" for="node" attr.name="homepage" attr.type="string"/>\n')
 	filehandler.write('<key id="label_n" for="node" attr.name="label_n" attr.type="string"/>\n')
+	filehandler.write('<key id="labelV" for="node" attr.name="labelV" attr.type="string"/>\n')
+	filehandler.write('<key id="labelE" for="edge" attr.name="labelE" attr.type="string"/>\n')
+	filehandler.write('<key id="label_e" for="edge" attr.name="label_e" attr.type="string"/>\n')
 	filehandler.write('<key id="country" for="node" attr.name="country" attr.type="string"/>\n')
 	filehandler.write('<key id="ProductPropertyNumeric_1" for="node" attr.name="ProductPropertyNumeric_1" attr.type="int"/>\n')
 	filehandler.write('<key id="ProductPropertyNumeric_2" for="node" attr.name="ProductPropertyNumeric_2" attr.type="int"/>\n')
@@ -39,9 +42,8 @@ def initiateFile(filehandler):
 	filehandler.write('<key id="vendorID" for="node" attr.name="vendorID" attr.type="int"/>\n')
 	filehandler.write('<key id="offerID" for="node" attr.name="offerID" attr.type="int"/>\n')
 	filehandler.write('<key id="producerID" for="node" attr.name="producerID" attr.type="int"/>\n')
-	filehandler.write('<key id="productFeatureID" for="node" attr.name="productFeatureID" attr.type="int"/>\n')	
-    filehandler.write('\t<graph id="G" edgedefault="undirected">\n')	
-
+	filehandler.write('<key id="productFeatureID" for="node" attr.name="productFeatureID" attr.type="int"/>\n')
+	filehandler.write('\t<graph id="G" edgedefault="undirected">\n')
 
 def endFile(filehandler):
 	filehandler.write("\t</graph>\n")
@@ -49,7 +51,10 @@ def endFile(filehandler):
 
 def writeEdges(filehandler, allEdges, _id):
 	for each in allEdges:
-		filehandler.write('\t<edge id="%d" source="%d" target="%d" label_n="%s"></edge>\n'%(_id, each[0], each[1], each[2]))
+		filehandler.write('\t<edge id="%d" source="%d" target="%d">\n'%(_id, each[0], each[1]))
+		filehandler.write('\t\t<data key="labelE">%s</data>\n'%(each[2]))
+		filehandler.write('\t\t<data key="label_e">%s</data>\n'%(each[2]))
+		filehandler.write('\t</edge>\n')		
 		_id+=1
 
 def writeToFileWithNested(filehandler, data, dataNested, tabIndex):
@@ -104,7 +109,7 @@ def foo(filename, graphMLFileName, logger):
 		pud = each.find("publishdate").text
 		productTypeIdMap[each["id"]] = _id 
 		subclass = None
-		writeToFile(graphMLFile, {'productTypeID':each["id"], '_id':_id, 'type': 'product_type', 'label_n':label_n , 'comment':comment }, defaultTabIndex)
+		writeToFile(graphMLFile, {'productTypeID':each["id"], '_id':_id, 'labelV' : 'product_type', 'type': 'product_type', 'label_n':label_n , 'comment':comment }, defaultTabIndex)
 		try:
 			subclass = each.find("subclassof").text
 			allEdges.append((int(subclass), _id, "subclass"))
@@ -125,7 +130,7 @@ def foo(filename, graphMLFileName, logger):
 		pub = each.find("publisher").text
 		pud = each.find("publishdate").text
 		productFeatureIdMap[each["id"]] = _id 
-		writeToFile(graphMLFile, {'productFeatureID' : each["id"], '_id':_id, 'type':'product_feature', 'label_n':label_n , 'comment':comment }, defaultTabIndex)
+		writeToFile(graphMLFile, {'productFeatureID' : each["id"], '_id':_id, 'labelV':'product_feature', 'type':'product_feature', 'label_n':label_n , 'comment':comment }, defaultTabIndex)
 
 		_id+=1
 
@@ -144,8 +149,7 @@ def foo(filename, graphMLFileName, logger):
 		pub = each.find("publisher").text
 		pud = each.find("publishdate").text
 		producerIdMap[each["id"]] = _id 
-		writeToFile(graphMLFile, {'producerID':each["id"], '_id':_id, 'type':'producer', 'label_n':label_n , 'comment':comment, \
-														'homepage':homepage, 'country':country }, defaultTabIndex)
+		writeToFile(graphMLFile, {'producerID':each["id"], '_id':_id, 'labelV':'producer','type':'producer', 'label_n':label_n , 'comment':comment, 'homepage':homepage, 'country':country }, defaultTabIndex)
 		_id+=1
 
 	logger.info("Finished Reading Producer Tags. Total Nodes created in the graph till now = %d" % (_id-1))
@@ -168,8 +172,7 @@ def foo(filename, graphMLFileName, logger):
 		productIdMap[each["id"]] = _id 
 		productPropertyTexts = each.findAll("productpropertytextual")
 		productPropertyNumeric = each.findAll("productpropertynumeric")
-		writeToFileWithNested(graphMLFile, {'productID' : each["id"], '_id':_id, 'type':'product', 'label_n':label_n, 'comment':comment} ,\
-				{'ProductPropertyTextual':productPropertyTexts, 'ProductPropertyNumeric':productPropertyNumeric}, defaultTabIndex)
+		writeToFileWithNested(graphMLFile, {'productID' : each["id"], '_id':_id, 'labelV':'product', 'type':'product', 'label_n':label_n, 'comment':comment} , {'ProductPropertyTextual':productPropertyTexts, 'ProductPropertyNumeric':productPropertyNumeric}, defaultTabIndex)
 		_id+=1
 		
 	logger.info("Finished Reading Product Tags. Total Nodes created in the graph till now = %d" % (_id-1))
@@ -186,8 +189,7 @@ def foo(filename, graphMLFileName, logger):
 		homepage = each.find("homepage").text
 		country = each.find("country").text
 		vendorIdMap[each["id"]] = _id 
-		writeToFile(graphMLFile, {'vendorID':each["id"], '_id':_id, 'type':'vendor', 'label_n':label_n , 'comment':comment, \
-														'homepage':homepage, 'country':country }, defaultTabIndex)
+		writeToFile(graphMLFile, {'vendorID':each["id"], '_id':_id, 'labelV':'vendor','type':'vendor', 'label_n':label_n , 'comment':comment, 'homepage':homepage, 'country':country }, defaultTabIndex)
 		_id+=1
 
 	logger.info("Finished Reading Vendor Tags. Total Nodes created in the graph till now = %d" % (_id-1))
@@ -209,8 +211,7 @@ def foo(filename, graphMLFileName, logger):
 		offerWebPage = each.find("offerwebpage").text
 		allEdges.append((productIdMap[prod], _id, "offeron"))
 		allEdges.append((vendorIdMap[vend], _id, "offerby"))
-		writeToFile(graphMLFile, {'offerID':each["id"], '_id':_id, 'type':'offer', 'OfferWebPage':offerWebPage , 'price':price, \
-														'DeliveryDays':dd, 'ValidFrom':vf, 'ValidTill':vt }, defaultTabIndex)
+		writeToFile(graphMLFile, {'offerID':each["id"], '_id':_id, 'labelV':'offer','type':'offer', 'OfferWebPage':offerWebPage , 'price':price, 'DeliveryDays':dd, 'ValidFrom':vf, 'ValidTill':vt }, defaultTabIndex)
 
 		_id+=1
 	logger.info("Finished Reading Offer Tags. Total Nodes created in the graph till now = %d" % (_id-1))
@@ -226,7 +227,7 @@ def foo(filename, graphMLFileName, logger):
 		mbox_sha1sum = each.find("mbox_sha1sum").text
 		country = each.find("country").text
 		personIdMap[each["id"]] = _id
-		writeToFile(graphMLFile, {'reviewerID':each["id"] ,'_id':_id, 'type':'reviewer', 'mbox_sha1sum':mbox_sha1sum , 'country':country}, defaultTabIndex)
+		writeToFile(graphMLFile, {'reviewerID':each["id"] ,'_id':_id, 'labelV' : 'reviewer', 'type':'reviewer', 'mbox_sha1sum':mbox_sha1sum , 'country':country}, defaultTabIndex)
 
 		_id+=1
 	logger.info("Finished Reading Reviewer Tags. Total Nodes created in the graph till now = %d" % (_id-1))
@@ -247,8 +248,7 @@ def foo(filename, graphMLFileName, logger):
 		reviewIdMap[each["id"]] = _id
 		allEdges.append((_id, productIdMap[prod], "reviewfor"))
 		allEdges.append((personIdMap[reviewer], _id, "reviewby"))
-		writeToFileWithNested(graphMLFile, {'reviewID': each["id"], '_id':_id, 'type':'review', 'title':title, 'text':textD, 'reviewDate':reviewDate} ,\
-				{'rating':ratings}, defaultTabIndex)
+		writeToFileWithNested(graphMLFile, {'reviewID': each["id"], '_id':_id, 'labelV' : 'review', 'type':'review', 'title':title, 'text':textD, 'reviewDate':reviewDate} , {'rating':ratings}, defaultTabIndex)
 		_id+=1
 		
 	logger.info("Finished Reading Review Tags. Total Nodes created in the graph till now = %d" % (_id-1))
